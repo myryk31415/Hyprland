@@ -163,6 +163,7 @@ class CCompositor {
     void                   addToFadingOutSafe(PHLWINDOW);
     PHLWINDOW              getWindowByRegex(const std::string&);
     void                   warpCursorTo(const Vector2D&, bool force = false);
+    void                   moveCursorTo(const Vector2D&, bool force = false);
     PHLLS                  getLayerSurfaceFromSurface(SP<CWLSurfaceResource>);
     void                   closeWindow(PHLWINDOW);
     Vector2D               parseWindowVectorArgsRelative(const std::string&, const Vector2D&);

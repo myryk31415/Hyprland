@@ -1592,7 +1592,7 @@ void CKeybindManager::moveCursor(std::string args) {
     x = std::stoi(x_str);
     y = std::stoi(y_str);
 
-    g_pCompositor->warpCursorTo({x, y}, true);
+    g_pCompositor->moveCursorTo({x, y}, true);
 }
 
 void CKeybindManager::workspaceOpt(std::string args) {

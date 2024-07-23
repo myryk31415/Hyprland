@@ -2406,6 +2406,27 @@ void CCompositor::warpCursorTo(const Vector2D& pos, bool force) {
         setActiveMonitor(PMONITORNEW);
 }
 
+void CCompositor::moveCursorTo(const Vector2D& pos, bool force) {
+
+    // warpCursorTo should only be used for warps that
+    // should be disabled with no_warps
+
+    static auto PNOWARPS = CConfigValue<Hyprlang::INT>("cursor:no_warps");
+
+    if (*PNOWARPS && !force) {
+        const auto PMONITORNEW = getMonitorFromVector(pos);
+        if (PMONITORNEW != m_pLastMonitor.get())
+            setActiveMonitor(PMONITORNEW);
+        return;
+    }
+
+    g_pPointerManager->move(pos);
+
+    const auto PMONITORNEW = getMonitorFromVector(pos);
+    if (PMONITORNEW != m_pLastMonitor.get())
+        setActiveMonitor(PMONITORNEW);
+}
+
 void CCompositor::closeWindow(PHLWINDOW pWindow) {
     if (pWindow && validMapped(pWindow)) {
         g_pXWaylandManager->sendCloseWindow(pWindow);
