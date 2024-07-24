@@ -81,6 +81,7 @@ CKeybindManager::CKeybindManager() {
     m_mDispatchers["focusmonitor"]                   = focusMonitor;
     m_mDispatchers["movecursortocorner"]             = moveCursorToCorner;
     m_mDispatchers["movecursor"]                     = moveCursor;
+    m_mDispatchers["movemouse"]                      = moveMouse;
     m_mDispatchers["workspaceopt"]                   = workspaceOpt;
     m_mDispatchers["exit"]                           = exitHyprland;
     m_mDispatchers["movecurrentworkspacetomonitor"]  = moveCurrentWorkspaceToMonitor;
@@ -1592,7 +1593,49 @@ void CKeybindManager::moveCursor(std::string args) {
     x = std::stoi(x_str);
     y = std::stoi(y_str);
 
-    g_pCompositor->moveCursorTo({x, y}, true);
+    g_pCompositor->warpCursorTo({x, y}, true);
+}
+
+void CKeybindManager::moveMouse(std::string args) {
+    std::string x_str, y_str;
+    int         x, y;
+
+    args = trim(args);
+    //TODO adjust check
+    size_t      i = args.find_first_of(' ');
+
+    if (i == std::string::npos) {
+        Debug::log(ERR, "moveMouse takes 2 arguments.");
+        return;
+    }
+
+    x_str = args.substr(0, i);
+    y_str = args.substr(i + 1);
+e`
+    Debug::log(LOG, "x: {}, y: {}", x_str, y_str);
+    if (!isNumber(x_str)) {
+        Debug::log(ERR, "moveCursor, x argument has to be a number. ({})", x_str);
+        return;
+    }
+    if (!isNumber(y_str)) {
+        Debug::log(ERR, "moveCursor, y argument has to be a number. ({})", y_str);
+        return;
+    }
+
+    x = std::stoi(x_str);
+    y = std::stoi(y_str);
+
+    Debug::log(LOG, "My dispatcher was called! :D");
+
+    //TODO std::any_cast?
+    g_pInputManager->onMouseMoved(IPointer::SMotionEvent{
+        .timeMs = 0,
+        .delta = {x, y},
+        .unaccel = {x, y},
+    });
+
+    // g_pSeatManager->sendPointerMotion(10, Vector2D(x, y));
+    // g_pCompositor->warpCursorTo({x, y}, true);
 }
 
 void CKeybindManager::workspaceOpt(std::string args) {

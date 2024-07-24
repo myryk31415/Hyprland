@@ -169,6 +169,7 @@ class CKeybindManager {
     static void     swapSplit(std::string);
     static void     moveCursorToCorner(std::string);
     static void     moveCursor(std::string);
+    static void     moveMouse(std::string);
     static void     workspaceOpt(std::string);
     static void     renameWorkspace(std::string);
     static void     exitHyprland(std::string);
