@@ -560,6 +560,21 @@ int repeatKeyHandler(void* data) {
     return 0;
 }
 
+int inputSimHandler(void* data) {
+    SKeybind** ppActiveKeybind = (SKeybind**)data;
+
+    if (!*ppActiveKeybind || g_pSeatManager->keyboard.expired())
+        return 0;
+
+    const auto DISPATCHER = g_pKeybindManager->m_mDispatchers.find((*ppActiveKeybind)->handler);
+
+    DISPATCHER->second((*ppActiveKeybind)->arg);
+
+    wl_event_source_timer_update(g_pKeybindManager->m_pActiveKeybindEventSource, 10);
+
+    return 0;
+}
+
 eMultiKeyCase CKeybindManager::mkKeysymSetMatches(const std::set<xkb_keysym_t> keybindKeysyms, const std::set<xkb_keysym_t> pressedKeysyms) {
     // Returns whether two sets of keysyms are equal, partially equal, or not
     // matching. (Partially matching means that pressed is a subset of bound)
@@ -729,6 +744,15 @@ bool CKeybindManager::handleKeybinds(const uint32_t modmask, const SPressedKeyWi
             const auto PACTIVEKEEB = g_pSeatManager->keyboard.lock();
 
             wl_event_source_timer_update(m_pActiveKeybindEventSource, PACTIVEKEEB->repeatDelay);
+        }
+
+        if (k.inputSim) {
+            m_pActiveKeybind            = &k;
+            m_pActiveKeybindEventSource = wl_event_loop_add_timer(g_pCompositor->m_sWLEventLoop, inputSimHandler, &m_pActiveKeybind);
+
+            const auto PACTIVEKEEB = g_pSeatManager->keyboard.lock();
+
+            wl_event_source_timer_update(m_pActiveKeybindEventSource, 1);
         }
 
         if (!k.nonConsuming)
@@ -1598,7 +1622,8 @@ void CKeybindManager::moveCursor(std::string args) {
 
 void CKeybindManager::moveMouse(std::string args) {
     std::string x_str, y_str;
-    int         x, y;
+    // int         x, y;
+    std::optional<float> x, y;
 
     args = trim(args);
     //TODO adjust check
@@ -1611,27 +1636,38 @@ void CKeybindManager::moveMouse(std::string args) {
 
     x_str = args.substr(0, i);
     y_str = args.substr(i + 1);
-e`
-    Debug::log(LOG, "x: {}, y: {}", x_str, y_str);
-    if (!isNumber(x_str)) {
-        Debug::log(ERR, "moveCursor, x argument has to be a number. ({})", x_str);
-        return;
-    }
-    if (!isNumber(y_str)) {
-        Debug::log(ERR, "moveCursor, y argument has to be a number. ({})", y_str);
-        return;
-    }
 
-    x = std::stoi(x_str);
-    y = std::stoi(y_str);
+    Debug::log(LOG, "x: {}, y: {}", x_str, y_str);
+    // if (!isNumber(x_str)) {
+    //     Debug::log(ERR, "movemou, x argument has to be a number. ({})", x_str);
+    //     return;
+    // }
+    // if (!isNumber(y_str)) {
+    //     Debug::log(ERR, "moveCursor, y argument has to be a number. ({})", y_str);
+    //     return;
+    // }
+
+    x = getPlusMinusKeywordResult(x_str, 0);
+    y = getPlusMinusKeywordResult(y_str, 0);
+    // x = std::stoi(x_str);
+    // y = std::stoi(y_str);
+
+    if (!x.has_value()) {
+        Debug::log(ERR, "moveMouse: x value invalid");
+        return;
+    }
+    if (!y.has_value()) {
+        Debug::log(ERR, "moveMouse: y value invalid");
+        return;
+    }
 
     Debug::log(LOG, "My dispatcher was called! :D");
 
     //TODO std::any_cast?
     g_pInputManager->onMouseMoved(IPointer::SMotionEvent{
         .timeMs = 0,
-        .delta = {x, y},
-        .unaccel = {x, y},
+        .delta = {x.value(), y.value()},
+        .unaccel = {x.value(), y.value()},
     });
 
     // g_pSeatManager->sendPointerMotion(10, Vector2D(x, y));
