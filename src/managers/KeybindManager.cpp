@@ -1621,11 +1621,16 @@ void CKeybindManager::moveCursor(std::string args) {
 }
 
 void CKeybindManager::moveMouse(std::string args) {
-    std::string x_str, y_str;
     // int         x, y;
-    std::optional<float> x, y;
+    std::string             x_str, y_str;
+    std::optional<float>    x, y;
+    bool                    exact = false;
 
     args = trim(args);
+    if (args.starts_with("exact")) {
+        exact = true;
+        args = args.substr(5);
+    }
     //TODO adjust check
     size_t      i = args.find_first_of(' ');
 
@@ -1663,12 +1668,19 @@ void CKeybindManager::moveMouse(std::string args) {
 
     Debug::log(LOG, "My dispatcher was called! :D");
 
-    //TODO std::any_cast?
-    g_pInputManager->onMouseMoved(IPointer::SMotionEvent{
-        .timeMs = 0,
-        .delta = {x.value(), y.value()},
-        .unaccel = {x.value(), y.value()},
-    });
+    if (exact) {
+        g_pInputManager->onMouseWarp(IPointer::SMotionAbsoluteEvent{
+            .timeMs = 0,
+            .absolute = {x.value(), y.value()},
+        });
+    } else {
+        //TODO std::any_cast?
+        g_pInputManager->onMouseMoved(IPointer::SMotionEvent{
+            .timeMs = 0,
+            .delta = {x.value(), y.value()},
+            .unaccel = {x.value(), y.value()},
+        });
+    }
 
     // g_pSeatManager->sendPointerMotion(10, Vector2D(x, y));
     // g_pCompositor->warpCursorTo({x, y}, true);

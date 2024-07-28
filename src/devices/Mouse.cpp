@@ -23,6 +23,7 @@ CMouse::CMouse(wlr_pointer* mouse_) : mouse(mouse_) {
     hyprListener_motion.initCallback(&mouse->events.motion, [this] (void* owner, void* data) {
         auto E = (wlr_pointer_motion_event*)data;
 
+        Debug::log(LOG, "it is what it is");
         pointerEvents.motion.emit(SMotionEvent{
             .timeMs  = E->time_msec,
             .delta   = {E->delta_x, E->delta_y},
